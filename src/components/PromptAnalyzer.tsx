@@ -64,11 +64,13 @@ const PromptAnalyzer = () => {
   
   const handleUseOptimized = () => {
     if (result) {
+      // On utilise directement le prompt optimisé sans ajouter d'autres éléments
       setPrompt(result.optimizedPrompt);
       toast({
         title: "Prompt optimisé appliqué",
         description: "Le prompt optimisé a été copié dans le champ d'entrée",
       });
+      // Réinitialiser les résultats après avoir appliqué le prompt optimisé
       setResult(null);
     }
   };

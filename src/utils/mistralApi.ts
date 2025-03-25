@@ -75,6 +75,7 @@ function improvePrompt(originalPrompt: string): string {
     { from: "je veux", to: "j'aimerais obtenir" },
     { from: "explique", to: "pourrais-tu expliquer en détail" },
     { from: "liste", to: "pourrais-tu me présenter une liste organisée de" },
+    { from: "creer", to: "créer" }, // Correction orthographique
   ];
   
   let improvedPrompt = originalPrompt;
@@ -86,8 +87,11 @@ function improvePrompt(originalPrompt: string): string {
     }
   });
   
-  // Ajout d'une précision sur le format si non spécifié
-  if (!improvedPrompt.includes("format") && Math.random() > 0.5) {
+  // Vérifier si le prompt amélioré contient déjà une demande de structuration
+  const hasStructureRequest = /structur.*réponse|format.*clair|section.*délimit/i.test(improvedPrompt);
+  
+  // Ajouter une précision sur le format si non spécifié, mais une seule fois
+  if (!hasStructureRequest) {
     improvedPrompt += "\n\nMerci de structurer ta réponse de manière claire et concise, avec des sections bien délimitées.";
   }
   
