@@ -25,7 +25,7 @@ export const analyzePrompt = async (
     // Pour la démonstration, nous retournons un résultat simulé
     // Dans la version réelle, vous feriez un appel à l'API Mistral ici
     return {
-      optimizedPrompt: improvePrompt(prompt),
+      optimizedPrompt: reformulatePrompt(prompt),
       improvements: generateImprovements(prompt),
       score: calculateScore(prompt),
     };
@@ -65,74 +65,101 @@ export const analyzePrompt = async (
   }
 };
 
-// Fonctions de simulation pour la démo
-
-function improvePrompt(originalPrompt: string): string {
-  // Simulation d'amélioration de prompt
-  const improvements = [
-    { from: "fais", to: "pourrais-tu générer" },
-    { from: "donne-moi", to: "pourrais-tu me fournir" },
-    { from: "je veux", to: "j'aimerais obtenir" },
-    { from: "explique", to: "pourrais-tu expliquer en détail" },
-    { from: "liste", to: "pourrais-tu me présenter une liste organisée de" },
-    { from: "creer", to: "créer" }, // Correction orthographique
-  ];
-  
-  let improvedPrompt = originalPrompt;
-  
-  improvements.forEach(({ from, to }) => {
-    const regex = new RegExp(`\\b${from}\\b`, "gi");
-    if (regex.test(improvedPrompt)) {
-      improvedPrompt = improvedPrompt.replace(regex, to);
-    }
-  });
-  
-  // Vérifier si le prompt amélioré contient déjà une demande de structuration
-  const hasStructureRequest = /structur.*réponse|format.*clair|section.*délimit/i.test(improvedPrompt);
-  
-  // Ajouter une précision sur le format si non spécifié, mais une seule fois
-  if (!hasStructureRequest) {
-    improvedPrompt += "\n\nMerci de structurer ta réponse de manière claire et concise, avec des sections bien délimitées.";
+// Fonction de reformulation complète du prompt
+function reformulatePrompt(originalPrompt: string): string {
+  // Si le prompt est très court, on ajoute plus de contexte
+  if (originalPrompt.trim().length < 20) {
+    return `Je souhaite obtenir ${originalPrompt.trim()}. Pourrais-tu me fournir une explication détaillée avec des exemples concrets? Merci de structurer ta réponse en sections distinctes pour faciliter la compréhension.`;
   }
   
-  return improvedPrompt;
+  // Construction d'un prompt entièrement reformulé
+  const clearIntent = extractIntent(originalPrompt);
+  
+  // Format général pour un prompt optimal
+  let reformulatedPrompt = `Je souhaite obtenir des informations détaillées concernant ${clearIntent}.\n\n`;
+  
+  // Ajout de contexte
+  reformulatedPrompt += "Voici ce que j'aimerais spécifiquement :\n";
+  reformulatedPrompt += `- Une explication claire et précise de ${clearIntent}\n`;
+  
+  // Si on détecte une demande de création, on ajoute des éléments spécifiques
+  if (originalPrompt.match(/cré[ée]r|faire|développer|construire|implémenter/i)) {
+    reformulatedPrompt += "- Des étapes structurées pour la réalisation\n";
+    reformulatedPrompt += "- Des exemples de code ou de mise en œuvre si pertinent\n";
+  }
+  
+  // Si on détecte une demande d'explication
+  if (originalPrompt.match(/expliqu[ée]|comment|pourquoi|différence/i)) {
+    reformulatedPrompt += "- Une analyse des concepts principaux\n";
+    reformulatedPrompt += "- Des exemples illustratifs pour clarifier\n";
+  }
+  
+  // Ajout de la demande de format pour tous les prompts
+  reformulatedPrompt += "\nMerci de structurer ta réponse de manière claire et concise, avec des sections bien délimitées pour faciliter la lecture et la compréhension.";
+  
+  return reformulatedPrompt;
+}
+
+// Extraire l'intention principale du prompt
+function extractIntent(prompt: string): string {
+  // Retirer les mots courants de demande pour isoler le sujet
+  const cleanedPrompt = prompt
+    .replace(/je (veux|souhaite|voudrais|désire|aimerais)/gi, '')
+    .replace(/pourrais-tu|peux-tu|donne-moi|explique-moi|liste-moi|montre-moi/gi, '')
+    .replace(/créer|faire|développer|construire|implémenter/gi, '')
+    .trim();
+  
+  return cleanedPrompt;
 }
 
 function generateImprovements(originalPrompt: string): { title: string; description: string }[] {
   const possibleImprovements = [
     {
-      title: "Formulation plus précise",
-      description: "Utilisation d'un langage plus précis pour mieux communiquer l'intention."
+      title: "Reformulation complète",
+      description: "Restructuration intégrale du prompt pour maximiser la clarté et la précision."
     },
     {
-      title: "Structure améliorée",
-      description: "Ajout d'une structure claire pour organiser la demande en sections logiques."
+      title: "Ajout de structure",
+      description: "Organisation de la demande en sections logiques pour une réponse mieux structurée."
     },
     {
-      title: "Spécification du format",
-      description: "Indication du format de réponse souhaité pour obtenir un résultat plus exploitable."
+      title: "Précision de l'intention",
+      description: "Clarification de l'objectif principal pour éviter toute ambiguïté."
     },
     {
-      title: "Politesse et clarté",
-      description: "Formulation plus courtoise qui améliore généralement la qualité des réponses."
+      title: "Format de réponse spécifié",
+      description: "Indication explicite du format souhaité pour obtenir une réponse bien organisée."
     },
     {
-      title: "Contextualisation",
-      description: "Ajout de contexte pour aider le modèle à mieux comprendre l'intention."
+      title: "Enrichissement contextuel",
+      description: "Ajout d'éléments de contexte pour une meilleure compréhension de la demande."
     },
     {
-      title: "Réduction de l'ambiguïté",
-      description: "Clarification des termes qui pourraient être interprétés de différentes façons."
+      title: "Formulation courtoise",
+      description: "Utilisation d'un ton plus courtois qui tend à améliorer la qualité des réponses."
     }
   ];
   
-  // Sélection aléatoire de 2 à 4 améliorations
-  const numberOfImprovements = Math.floor(Math.random() * 3) + 2;
+  // Sélection d'améliorations pertinentes selon le prompt
+  let selectedImprovements = [];
   
-  // Mélange et sélection des améliorations
-  return [...possibleImprovements]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, numberOfImprovements);
+  // Toujours inclure la reformulation complète
+  selectedImprovements.push(possibleImprovements[0]);
+  
+  // Si le prompt est court ou imprécis
+  if (originalPrompt.length < 50) {
+    selectedImprovements.push(possibleImprovements[2]); // Précision de l'intention
+    selectedImprovements.push(possibleImprovements[4]); // Enrichissement contextuel
+  }
+  
+  // Si le prompt ne mentionne pas de structure
+  if (!originalPrompt.match(/structur|organis|section|format/i)) {
+    selectedImprovements.push(possibleImprovements[1]); // Ajout de structure
+    selectedImprovements.push(possibleImprovements[3]); // Format de réponse spécifié
+  }
+  
+  // Limiter à 4 améliorations maximum
+  return selectedImprovements.slice(0, 4);
 }
 
 function calculateScore(prompt: string): number {
