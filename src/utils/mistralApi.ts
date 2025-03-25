@@ -24,10 +24,12 @@ export const analyzePrompt = async (
     
     // Pour la démonstration, nous retournons un résultat simulé
     // Dans la version réelle, vous feriez un appel à l'API Mistral ici
+    const correctedPrompt = correctFrenchErrors(prompt);
+    
     return {
-      optimizedPrompt: reformulatePrompt(prompt),
-      improvements: generateImprovements(prompt),
-      score: calculateScore(prompt),
+      optimizedPrompt: reformulatePrompt(correctedPrompt),
+      improvements: generateImprovements(correctedPrompt),
+      score: calculateScore(correctedPrompt),
     };
     
     // Code pour un vrai appel API (à remplacer par l'implémentation réelle)
@@ -65,11 +67,64 @@ export const analyzePrompt = async (
   }
 };
 
+// Fonction pour corriger les erreurs de français courantes
+function correctFrenchErrors(text: string): string {
+  if (!text) return text;
+  
+  // Corrections courantes dans les textes français
+  const corrections: [RegExp, string][] = [
+    [/\bje veux (obtenir|avoir|savoir) /gi, "Je souhaite "],
+    [/\bje (veux|voudrais|aimerais) (obtenir|avoir|savoir) /gi, "Je souhaite "],
+    [/\bcréer un jeu\b/gi, "créer un jeu"],
+    [/\bcréé un jeu\b/gi, "créer un jeu"],
+    [/\bcréér\b/gi, "créer"],
+    [/\bcreer\b/gi, "créer"],
+    [/\bmorpion\b/gi, "morpion"],
+    [/\btictactoe\b/gi, "tic-tac-toe"],
+    [/\bpourrais tu\b/gi, "pourrais-tu"],
+    [/\best ce que\b/gi, "est-ce que"],
+    [/\bqu'est ce que\b/gi, "qu'est-ce que"],
+    [/\ba propos\b/gi, "à propos"],
+    [/\bparmis\b/gi, "parmi"],
+    [/\bdiffèrentes\b/gi, "différentes"],
+    [/\bdiscution\b/gi, "discussion"],
+    [/\bsecurite\b/gi, "sécurité"],
+    [/\bprobablement\b/gi, "probablement"],
+    [/\bprobleme\b/gi, "problème"],
+    [/\bcomme meme\b/gi, "quand même"],
+    [/\ben fonction\b/gi, "en fonction"],
+    [/\bplusieur\b/gi, "plusieurs"],
+    [/\ban\b/gi, "année"],
+    // Correction de la casse au début des phrases
+    [/(?<=\.\s+|\?\s+|\!\s+)[a-z]/g, match => match.toUpperCase()],
+    // Correction des espaces avant les signes de ponctuation
+    [/\s+([,\.;:\?!])/g, "$1"],
+    // Correction des espaces après les signes de ponctuation
+    [/([,\.;:\?!])([^\s])/g, "$1 $2"],
+    // Ajout d'espaces avant les signes de ponctuation doubles en français
+    [/([^\s])([;:!?])/g, "$1 $2"],
+  ];
+  
+  let correctedText = text;
+  
+  // Appliquer les corrections
+  for (const [pattern, replacement] of corrections) {
+    correctedText = correctedText.replace(pattern, replacement);
+  }
+  
+  // Capitaliser la première lettre du texte si ce n'est pas déjà fait
+  if (correctedText.length > 0 && /[a-z]/.test(correctedText[0])) {
+    correctedText = correctedText.charAt(0).toUpperCase() + correctedText.slice(1);
+  }
+  
+  return correctedText;
+}
+
 // Fonction de reformulation complète du prompt
 function reformulatePrompt(originalPrompt: string): string {
   // Si le prompt est très court, on ajoute plus de contexte
   if (originalPrompt.trim().length < 20) {
-    return `Je souhaite obtenir ${originalPrompt.trim()}. Pourrais-tu me fournir une explication détaillée avec des exemples concrets? Merci de structurer ta réponse en sections distinctes pour faciliter la compréhension.`;
+    return `Je souhaite ${originalPrompt.trim()}. Pourrais-tu me fournir une explication détaillée avec des exemples concrets ? Merci de structurer ta réponse en sections distinctes pour faciliter la compréhension.`;
   }
   
   // Construction d'un prompt entièrement reformulé
@@ -137,6 +192,10 @@ function generateImprovements(originalPrompt: string): { title: string; descript
     {
       title: "Formulation courtoise",
       description: "Utilisation d'un ton plus courtois qui tend à améliorer la qualité des réponses."
+    },
+    {
+      title: "Correction orthographique",
+      description: "Correction des fautes d'orthographe et de grammaire pour améliorer la compréhension."
     }
   ];
   
@@ -145,6 +204,13 @@ function generateImprovements(originalPrompt: string): { title: string; descript
   
   // Toujours inclure la reformulation complète
   selectedImprovements.push(possibleImprovements[0]);
+  
+  // Si le prompt contient des erreurs d'orthographe détectables
+  const originalText = originalPrompt;
+  const correctedText = correctFrenchErrors(originalPrompt);
+  if (originalText !== correctedText) {
+    selectedImprovements.push(possibleImprovements[6]); // Correction orthographique
+  }
   
   // Si le prompt est court ou imprécis
   if (originalPrompt.length < 50) {
@@ -180,6 +246,18 @@ function calculateScore(prompt: string): number {
       score += 0.5;
     }
   });
+  
+  // Pénalité pour les fautes d'orthographe
+  const originalText = prompt;
+  const correctedText = correctFrenchErrors(prompt);
+  if (originalText !== correctedText) {
+    // Calculer le pourcentage de différence
+    const diffCount = [...originalText].filter((char, i) => char !== correctedText[i]).length;
+    const diffPercentage = diffCount / originalText.length;
+    
+    // Pénalité proportionnelle aux différences
+    score -= Math.min(2, diffPercentage * 10);
+  }
   
   // Limiter le score entre 1 et 10
   return Math.max(1, Math.min(10, Math.round(score)));

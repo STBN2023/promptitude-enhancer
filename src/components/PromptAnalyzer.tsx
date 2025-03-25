@@ -50,6 +50,16 @@ const PromptAnalyzer = () => {
     try {
       const analysisResult = await analyzePrompt(prompt, apiKey);
       setResult(analysisResult);
+      
+      // Vérifier si des corrections orthographiques ont été effectuées
+      if (prompt !== analysisResult.optimizedPrompt && 
+          analysisResult.improvements.some(imp => imp.title === "Correction orthographique")) {
+        toast({
+          title: "Correction orthographique",
+          description: "Des fautes de français ont été corrigées dans le prompt optimisé.",
+          variant: "default",
+        });
+      }
     } catch (error) {
       console.error(error);
       toast({

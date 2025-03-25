@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Copy, ArrowDownUp } from "lucide-react";
+import { Check, Copy, ArrowDownUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PromptSuggestionProps {
@@ -26,6 +26,9 @@ const PromptSuggestion = ({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Vérifier si des corrections orthographiques ont été effectuées
+  const hasSpellingCorrections = improvements.some(imp => imp.title === "Correction orthographique");
   
   return (
     <div className="space-y-4">
@@ -36,6 +39,12 @@ const PromptSuggestion = ({
         </TabsList>
         
         <TabsContent value="optimized" className="space-y-4 animate-fade-in">
+          {hasSpellingCorrections && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 rounded-md text-sm">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <p>Des corrections orthographiques ont été appliquées au prompt.</p>
+            </div>
+          )}
           <div className="relative">
             <div className="bg-background border border-border rounded-md p-4 text-sm whitespace-pre-wrap">
               {optimizedPrompt}
@@ -65,6 +74,12 @@ const PromptSuggestion = ({
               <span className="inline-block w-2 h-2 rounded-full bg-green-400 mr-1"></span>
               Ajouté
             </div>
+            {hasSpellingCorrections && (
+              <div className="flex items-center">
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1"></span>
+                Corrigé
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col md:flex-row gap-4">
@@ -97,7 +112,8 @@ const PromptSuggestion = ({
               key={index}
               className={cn(
                 "border border-border rounded-md p-3 text-sm bg-background/50",
-                "transition-all hover:bg-background"
+                "transition-all hover:bg-background",
+                improvement.title === "Correction orthographique" ? "border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20" : ""
               )}
             >
               <h5 className="font-medium mb-1">{improvement.title}</h5>
