@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promptitude Enhancer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Promptitude Enhancer</h1>
+    </header>
+    
+    <main>
+      <div class="status">
+        <div class="status-indicator active"></div>
+        <p>Extension active</p>
+      </div>
+      
+      <div class="option-group">
+        <h2>Options</h2>
+        <label class="switch">
+          <input type="checkbox" id="correction-ortho" checked>
+          <span class="slider"></span>
+          <span class="option-label">Correction orthographique</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="reformulation" checked>
+          <span class="slider"></span>
+          <span class="option-label">Reformulation de prompts</span>
+        </label>
+      </div>
+      
+      <div class="stats">
+        <p><span id="prompts-count">0</span> prompts améliorés</p>
+      </div>
+    </main>
+    
+    <footer>
+      <button id="settings-btn">Paramètres</button>
+      <button id="clear-data">Effacer les données</button>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

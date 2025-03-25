@@ -1,0 +1,10 @@
+
+Pour compléter l'extension, vous devez créer 3 fichiers d'icônes dans ce dossier:
+
+1. icon16.png - 16x16 pixels
+2. icon48.png - 48x48 pixels
+3. icon128.png - 128x128 pixels
+
+Ces icônes peuvent être créées avec n'importe quel logiciel de design graphique comme Figma, Adobe Illustrator, ou même en utilisant des services en ligne comme Canva.
+
+Les icônes doivent représenter votre extension d'amélioration de prompts, par exemple avec un symbole d'amélioration ou d'optimisation.
